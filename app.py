@@ -1,5 +1,6 @@
 import streamlit as st
 from PIL import Image, ExifTags
+from geopy.geocoders import Nominatim
 
 # Função para extrair e exibir todos os metadados EXIF da imagem
 def display_exif_data(image):
@@ -20,6 +21,10 @@ def display_exif_data(image):
         st.error(f"Erro ao obter os metadados EXIF: {e}")
         return None
 
+# Função para converter coordenadas GPS de DMS para formato decimal
+def convert_to_decimal(degrees, minutes, seconds):
+    return degrees + (minutes / 60.0) + (seconds / 3600.0)
+
 # Função para extrair os metadados GPS
 def get_location_from_exif(exif_data):
     try:
@@ -33,8 +38,17 @@ def get_location_from_exif(exif_data):
             if gps_info is not None:
                 # Extraímos a latitude e longitude
                 lat_deg = gps_info[2][0] / gps_info[2][1]
+                lat_min = gps_info[2][1] / gps_info[2][2]
+                lat_sec = gps_info[2][2] / gps_info[2][3]
+                lat = convert_to_decimal(lat_deg, lat_min, lat_sec)
+
                 lon_deg = gps_info[4][0] / gps_info[4][1]
-                return lat_deg, lon_deg
+                lon_min = gps_info[4][1] / gps_info[4][2]
+                lon_sec = gps_info[4][2] / gps_info[4][3]
+                lon = convert_to_decimal(lon_deg, lon_min, lon_sec)
+
+                # Exibir as coordenadas GPS
+                return lat, lon
         return None, None
     except Exception as e:
         st.error(f"Erro ao extrair localização: {e}")
